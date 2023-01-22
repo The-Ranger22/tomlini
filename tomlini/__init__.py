@@ -7,40 +7,46 @@ Author: Levi Schanding
 
 """
 
-class TomlKeyAttributeMismatch(Exception):
-    pass
 
-def _matching_cls_toml_keys(cls: object, toml: dict[str]) -> bool:
-    return (
-        frozenset(cls.__annotations__.keys()) == frozenset(toml.keys())
-    )
+def _add_init_args_and_annotations_to_cls(cls: object) -> object:
+    # Add 
+    clsargspec = inspect.getfullargspec(cls)
+    cls.__init_args = clsargspec.args[1:]
+    cls.__init_annotations = clsargspec.annotations
+    return cls
+
+
+
+def read_toml(filename: str) -> dict[str]:
+    with open(filename, "rb") as toml_handle:
+        return tomllib.load(toml_handle)
+
+
+
+def _load_arguments(params: list, annotations: dict[str], arguments: dict[str]) -> list:
+    return [
+        annotations[param](
+            *_load_arguments(
+                annotations[param].__init_args,
+                annotations[param].__init_annotations,
+                arguments[param]
+            )
+        )
+        if param in annotations.keys() and hasattr(annotations[param], 'load_from_toml') 
+        else arguments[param]
+        for param in params
+    ]
+
+
 
 def toml_init(cls: object):
     toml_dict: dict[str]
-
-    # Check that the class annotations match the toml
-
-
-    # with open(filename, "rb") as f:
-    #     toml_dict = tomllib.load(f)
-
-    
-
-    # if not _matching_cls_toml_keys(cls, toml_dict): 
-    #     raise TomlKeyAttributeMismatch("")
+    cls = _add_init_args_and_annotations_to_cls(cls)
 
     @classmethod
     def load_from_toml(cls: object, filename: str) -> object:
-        if not hasattr(cls, '__annotations__'):
-            raise AttributeError("""
-                '__annotations__' class attribute undefined! '@toml_init' requires your class to have annotations for each datafield. Example:
-                    @toml_init
-                    class ExampleCls:
-                        dfield_1: <dtype>
-                        dfield_2: <dtype>
-                        ...
-                        dfield_n: <dtype>
-            """)
+        assert hasattr(cls, "__init_args")
+        assert hasattr(cls, "__init_annotations")
 
         if not os.path.exists(filename):
             raise FileNotFoundError(f"Could not locate TOML '{filename}'")
@@ -48,26 +54,15 @@ def toml_init(cls: object):
         if not re.search("\.toml$", filename):
             raise tomllib.TOMLDecodeError(f"Expecting file ending in '.toml', received '{filename}'")
 
-        toml: dict[str]
-        
-        # load TOML config file
-        with open(filename, "rb") as toml_handle:
-            toml = tomllib.load(toml_handle)
-        
-        # Compare TOML keys against class annotations
-        if not _matching_cls_toml_keys(cls, toml):
-            raise TomlKeyAttributeMismatch("TOML keys and class annotations do not match!")
+        toml: dict[str] = read_toml(filename)
 
-        return cls(
-            *[toml[key] for key in inspect.getfullargspec(cls).args[1:]]
-        )
-
-    
-    def save_to_toml(self, filename: str = f"{type(cls)}.toml"):
-        print(filename)
+        return cls(*_load_arguments(
+            cls.__init_args, 
+            cls.__init_annotations,
+            toml
+        ))
 
 
     # Add functions to class
     cls.load_from_toml = load_from_toml
-    cls.save_to_toml = save_to_toml
     return cls
