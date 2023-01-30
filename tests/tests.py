@@ -1,6 +1,6 @@
 import unittest
-from tests.context import tomlini, TEST_DIR
-import tomlini
+from tests.context import TEST_DIR
+import src.tomlini as tomlini
 import tomllib
 
 

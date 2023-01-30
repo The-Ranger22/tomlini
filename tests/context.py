@@ -11,7 +11,6 @@ sys.path.insert(
     )
 )
 
-import tomlini
 
 
 TEST_DIR: str = os.path.dirname(__file__)
