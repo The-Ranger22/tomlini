@@ -9,17 +9,11 @@ Author: Levi Schanding
 
 
 def _add_init_args_and_annotations_to_cls(cls: object) -> object:
-    # Add 
+    
     clsargspec = inspect.getfullargspec(cls)
     cls.__init_args = clsargspec.args[1:]
     cls.__init_annotations = clsargspec.annotations
     return cls
-
-
-
-def read_toml(filename: str) -> dict[str]:
-    with open(filename, "rb") as toml_handle:
-        return tomllib.load(toml_handle)
 
 
 
@@ -40,13 +34,13 @@ def _load_arguments(params: list, annotations: dict[str], arguments: dict[str]) 
 
 
 def toml_init(cls: object):
+    if cls is None:
+        raise ValueError("A class must be passed! None is not allowed!")
     toml_dict: dict[str]
     cls = _add_init_args_and_annotations_to_cls(cls)
 
     @classmethod
     def load_from_toml(cls: object, filename: str) -> object:
-        assert hasattr(cls, "__init_args")
-        assert hasattr(cls, "__init_annotations")
 
         if not os.path.exists(filename):
             raise FileNotFoundError(f"Could not locate TOML '{filename}'")
@@ -54,7 +48,8 @@ def toml_init(cls: object):
         if not re.search("\.toml$", filename):
             raise tomllib.TOMLDecodeError(f"Expecting file ending in '.toml', received '{filename}'")
 
-        toml: dict[str] = read_toml(filename)
+        with open(filename, "rb") as toml_handle:
+            toml: dict[str] = tomllib.load(toml_handle)
 
         return cls(*_load_arguments(
             cls.__init_args, 
@@ -62,7 +57,23 @@ def toml_init(cls: object):
             toml
         ))
 
+    @classmethod
+    def load_from_toml_string(cls: object, toml_string: str):
+        if not isinstance(toml_string, str):
+            raise TypeError("'toml_string' must be of type 'str'!")
+
+        toml: dict[str] = tomllib.loads(toml_string)
+
+        return cls(*_load_arguments(
+            cls.__init_args, 
+            cls.__init_annotations,
+            toml
+        ))
+    
+
+
 
     # Add functions to class
     cls.load_from_toml = load_from_toml
+    cls.load_from_toml_string = load_from_toml_string
     return cls
