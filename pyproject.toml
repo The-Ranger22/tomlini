@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tomlini"
+version = "1.0.0"
+authors = [
+  { name="Levi C. Schanding", email="levischanding1@gmail.com" },
+]
+description = "A tiny library that simplifies class initialization from TOML files"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/The-Ranger22/tomlini"
+"Bug Tracker" = "https://github.com/The-Ranger22/tomlini/issues"
