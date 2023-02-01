@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tomlini"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Levi C. Schanding", email="levischanding1@gmail.com" },
 ]
-description = "A tiny library that simplifies class initialization from TOML files"
+description = "A tiny library for initializing objects from TOML files"
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
